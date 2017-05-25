@@ -1,5 +1,6 @@
 //  Setup
 var restify = require('restify');
+var restifyValidator = require('restify-validator');
 var baseController = require('./controllers/baseController.js');
 var usersController = require('./controllers/usersController.js');
 
@@ -7,7 +8,7 @@ var usersController = require('./controllers/usersController.js');
 var server = restify.createServer();
 
 // Execution, configuring the server then building the endpoints
-baseController(server, restify)
+baseController(server, restify, restifyValidator)
 usersController(server);
 
 // Turn on the server
