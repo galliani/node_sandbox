@@ -5,40 +5,66 @@ var server = restify.createServer();
 var users = {};
 var max_user_id = 0;
 
+// Helper Functions
+function respond(res, next, status, data, http_code) {
+  var response = {
+    'status': status,
+    'data': data
+  }
+
+  res.writeHead(http_code, {'Content-type': 'application/json'});
+  res.end(JSON.stringify(response));
+  return next();
+}
+
+function success(res, next, data) {
+  respond(res, next, 'success', data, 200);
+}
+
+function failure(res, next, data, http_code) {
+  respond(res, next, 'failure', data, http_code);
+}
+
+function validate_presence_of_user(user_id, res, next){
+  if (typeof(users[user_id]) === 'undefined') {
+    failure(res, next, 'User not found', 404);
+  }
+}
 // Instantiating options for the restify server
 server.use(restify.acceptParser(server.acceptable));
 server.use(restify.bodyParser());
 
 server.get("/", function(req, res, next){
-  res.writeHead(200, {'Content-type': 'application/json'});
-  res.end(JSON.stringify(users));
-  return next();
+  success(res, next, users);
 });
 
 server.get("/users/:id", function(req, res, next){
-  res.writeHead(200, {'Content-type': 'application/json'});
-  res.end(JSON.stringify(users[parseInt(req.params.id)]));
-  return next();
+  var user_id = parseInt(req.params.id);
+  validate_presence_of_user(user_id, res, next);
+
+  success(res, next, users[user_id]);
 });
 
 server.put("/users/:id", function(req, res, next){
-  var user = users[parseInt(req.params.id)];
+  var user_id = parseInt(req.params.id);
+  validate_presence_of_user(user_id, res, next);
+
+  var user = users[user_id];
   var updates = req.params;
   for( var field in updates ) {
     user[field] = updates[field];
   }
 
-  res.writeHead(200, {'Content-type': 'application/json'});
-  res.end(JSON.stringify(users[parseInt(req.params.id)]));
-  return next();
+  success(res, next, users[user_id]);
 });
 
 server.del("/users/:id", function(req, res, next){
-  delete users[parseInt(req.params.id)];
+  var user_id = parseInt(req.params.id);
+  validate_presence_of_user(user_id, res, next);
 
-  res.writeHead(204, {'Content-type': 'application/json'});
-  res.end(JSON.stringify(true));
-  return next();
+  delete users[user_id];
+
+  success(res, next, []);
 });
 
 server.post("/users", function(req, res, next){
@@ -51,9 +77,7 @@ server.post("/users", function(req, res, next){
   // Assigning an JSON hash object containing the user with key of user_id
   users[user.id] = user;
 
-  res.writeHead(201, {'Content-type': 'application/json'});
-  res.end(JSON.stringify(user));
-  return next();
+  success(res, next, user);
 });
 
 server.listen(8080, function() {
