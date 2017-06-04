@@ -1,8 +1,11 @@
 //  Setup
 var restify = require('restify');
 var restifyValidator = require('restify-validator');
+var mongoose = require('mongoose');
 var baseController = require('./controllers/baseController.js');
 var usersController = require('./controllers/usersController.js');
+
+mongoose.connect('mongodb://localhost/test');
 
 // Create server using restify
 var server = restify.createServer();
